@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐家人格测试 | Musician Personality Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: #f0f2f5;
+        }
+        .serif {
+            font-family: 'Noto Serif SC', serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar {
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .answer-btn {
+            transition: all 0.2s ease;
+        }
+        .answer-btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+
+    <div id="app" class="w-full max-w-2xl">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="glass rounded-[2.5rem] p-10 md:p-16 shadow-2xl text-center fade-in">
+            <div class="mb-8 flex justify-center">
+                <div class="bg-indigo-600 p-4 rounded-3xl shadow-lg rotate-3">
+                    <i data-lucide="music" class="w-12 h-12 text-white"></i>
+                </div>
+            </div>
+            <h1 class="serif text-4xl md:text-5xl font-bold text-slate-800 mb-6 tracking-tight">音乐家人格测试</h1>
+            <p class="text-slate-600 text-lg md:text-xl mb-10 leading-relaxed max-w-md mx-auto">
+                16位古典乐巨匠，谁才是你灵魂深处的映射？<br>
+                探索属于你的音乐基因。
+            </p>
+            <button onclick="startQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-5 rounded-full text-xl font-bold transition-all transform hover:scale-105 shadow-xl flex items-center justify-center mx-auto gap-3">
+                开启探索之旅
+                <i data-lucide="sparkles" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden glass rounded-[2.5rem] p-8 md:p-12 shadow-2xl fade-in">
+            <div class="flex justify-between items-center mb-10">
+                <button onclick="prevQuestion()" id="prev-btn" class="text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-1 invisible">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    返回
+                </button>
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]" id="progress-text">QUESTION 1 / 32</span>
+                    <div class="w-32 md:w-48 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="progress-bar h-full bg-indigo-500" style="width: 3%;"></div>
+                    </div>
+                </div>
+                <div class="w-10"></div> <!-- Spacer for centering -->
+            </div>
+            
+            <div class="min-h-[140px] flex items-center justify-center text-center mb-12">
+                <h2 id="question-title" class="serif text-2xl md:text-3xl font-bold text-slate-800 leading-snug">
+                    你总是想尝试新鲜事物，讨厌重复和陈旧？
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 md:gap-4">
+                <button onclick="selectAnswer(10)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">完全符合</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+                <button onclick="selectAnswer(6)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">有点符合</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="check" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+                <button onclick="selectAnswer(3)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">中立</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="minus" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+                <button onclick="selectAnswer(1)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">不太符合</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="x" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+                <button onclick="selectAnswer(0)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">完全不符合</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="x-circle" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+            </div>
+
+            <!-- New Bottom Back Button -->
+            <div id="bottom-back-container" class="mt-8 flex justify-center invisible">
+                <button onclick="prevQuestion()" class="text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full hover:bg-slate-50">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    返回上一问
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden glass rounded-[2.5rem] p-10 md:p-16 shadow-2xl text-center fade-in">
+            <div class="mb-10">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold tracking-widest uppercase mb-4">测试报告</div>
+                <h3 class="text-slate-400 text-lg md:text-xl font-medium">你的灵魂作曲家是</h3>
+            </div>
+            
+            <div class="mb-12">
+                <h1 id="result-name" class="serif text-6xl md:text-8xl font-black text-slate-900 mb-8 tracking-tighter">贝多芬</h1>
+                <div id="result-tags" class="flex flex-wrap justify-center gap-3 mb-10">
+                    <!-- Tags will be inserted here -->
+                </div>
+            </div>
+
+            <div class="bg-white p-8 md:p-12 rounded-[2.5rem] mb-12 shadow-sm border border-slate-100 relative text-left">
+                <i data-lucide="quote" class="absolute top-6 left-6 w-8 h-8 text-indigo-100 rotate-180 opacity-50"></i>
+                <p id="result-desc" class="text-slate-700 text-lg md:text-xl leading-relaxed serif italic relative z-10 indent-8">
+                    你性格直白爽快，不绕弯子，敢怒敢言，绝不委屈自己。
+                </p>
+                <i data-lucide="quote" class="absolute bottom-6 right-6 w-8 h-8 text-indigo-100 opacity-50"></i>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <button onclick="location.reload()" class="bg-slate-900 hover:bg-black text-white px-10 py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    再测一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            "composers": [
+                {"name":"斯特拉文斯基","tag":"求新、风流", "desc": "你骨子里藏着一股永不枯竭的探索欲，对一切陈旧、固化的事物都带着天然的排斥，仿佛创新是刻在基因里的本能。在音乐创作中，你从不满足于已有的风格与框架，一次次打破传统边界，从印象派到新古典主义，再到序列音乐，每一步都走得大胆而决绝。生活里的你更是风流随性，厌恶任何形式的束缚，不被世俗规则绑架，不迎合他人期待，活得自在而热烈，如同你的音乐一般，永远充满未知的惊喜与蓬勃的生命力。"},
+                {"name":"勃拉姆斯","tag":"伪善、内耗", "desc": "你是典型的“外冷内热”，外表始终保持着克制与沉稳，待人接物温和有礼，却从不让人轻易窥探到内心的真实模样。你擅长伪装自己的情绪，哪怕内心早已翻江倒海、反复拉扯，表面依旧平静无波。长期的自我内耗是你的常态，对自己有着极致的严苛，在创作中反复打磨、犹豫不决，既渴望被认可，又害怕暴露脆弱，这种矛盾感贯穿了你的一生，也让你的音乐里藏着不为人知的深沉与纠结。"},
+                {"name":"布鲁克纳","tag":"压抑、信仰", "desc": "你习惯将所有情绪深埋心底，不轻易流露喜怒哀乐，沉默是你最常有的状态，却并非冷漠，而是源于内心的内敛与虔诚。你有着坚定不可动摇的信仰，这份信仰如同黑暗中的光，支撑着你走过无数低谷，也融入到你的每一段旋律中。你不追求外界的喧嚣与赞誉，始终默默坚守自己的艺术追求，待人谦和、处事低调，那份沉默之下的坚定与虔诚，让人在不知不觉中感受到力量。"},
+                {"name":"贝多芬","tag":"直白、爽快", "desc": "你有着最直白爽快的性子，说话做事从不绕弯子，心里想什么便说什么，从不刻意讨好，也绝不委屈自己。你敢怒敢言，面对不公与压迫，从不选择妥协退让，哪怕遭遇命运的重创——失聪的打击，也始终保持着傲骨，用音乐呐喊出内心的不屈与抗争。你的性格如同你的作品，大气磅礴、直抒胸臆，带着一股勇往直前的韧劲，不掩饰脆弱，也不畏惧强权。"},
+                {"name":"莫扎特","tag":"天真、有趣", "desc": "你是被上帝偏爱的天才，天真有趣，灵气十足，仿佛永远长不大的孩子，对世界充满好奇与热爱。你讨厌一切沉重、压抑的事物，自带一种与生俱来的快乐氛围，走到哪里都能驱散阴霾。你的音乐轻盈明快、灵动悦耳，如同你本人一般，没有复杂的伪装，没有深沉的纠结，纯粹而干净，哪怕生活偶有坎坷，你也能以乐观的心态面对，用旋律传递最简单的美好。"},
+                {"name":"海顿","tag":"乐观、开朗", "desc": "你是天生的乐天派，乐观开朗的性子让你总能在平凡的生活中找到乐趣，也能在困境中自愈。你随和包容，待人宽厚，从不斤斤计较，无论是对待同行还是身边的人，都带着一份温和与善意。你不追求极致的华丽与震撼，擅长在平淡中挖掘美好，总能把日子过得轻松温暖，就像你的交响乐，质朴而亲切，没有尖锐的冲突，却能让人感受到治愈与安心。"},
+                {"name":"巴赫","tag":"稳重、坚定", "desc": "你是沉稳可靠的代名词，性格稳重坚定，做事一丝不苟，有着清晰不可动摇的原则，无论面对什么诱惑，都能坚守本心。你踏实内敛，不张扬、不浮躁，一步一个脚印地深耕自己的音乐领域，用一生的时间诠释着“专注”与“坚守”。在生活中，你是让人值得信赖的伙伴，待人真诚、处事稳妥，那份由内而外的踏实感，给身边的人带来强烈的安全感，就像你的复调音乐，严谨有序，却藏着无尽的温暖与力量。"},
+                {"name":"理查·施特劳斯","tag":"市侩、华丽", "desc": "你有着极为现实的一面，不回避自己对利益的追求，也懂得如何在世俗中保持体面，深谙人情世故，擅长平衡利弊。你偏爱华丽精致的生活，对品质有着极高的要求，这份追求也融入到你的音乐中，旋律华丽、配器繁复，充满了贵族般的优雅与气派。你不刻意标榜清高，坦然接受自己的欲望，在现实与艺术之间找到属于自己的平衡点，活得清醒而通透。"},
+                {"name":"勋伯格","tag":"颠覆、继承", "desc": "你是音乐史上的“革命者”，敢于颠覆传统的音乐体系，打破固有的旋律与和声规则，不被传统束缚，始终勇于探索新的音乐语言。但你并非盲目否定传统，反而极度尊重音乐的根基，在破坏与继承之间小心翼意地寻找平衡，最终走出了一条属于自己的独特道路。你性格中带着一份执着与坚定，哪怕遭遇质疑与非议，也始终坚持自己的艺术追求，用创新诠释着音乐的无限可能。"},
+                {"name":"瓦格纳","tag":"阴险、宏大", "desc": "你内心深沉，极具城府，从不轻易表露自己的真实想法，每一步都有着明确的规划与目的。你追求宏大的格局，无论是音乐创作还是人生追求，都力求极致与震撼，你的歌剧场面恢弘、剧情跌宕，充满了强烈的戏剧冲突，如同你的气场一般，强大而有压迫感，让人不自觉地被吸引、被折服。你有着强烈的野心与自信，始终朝着自己的目标稳步前行，从不畏惧挑战。"},
+                {"name":"马勒","tag":"敏感、易怒", "desc": "你是一个极度敏感的人，对外界的一切都有着强烈的感知力，一点小事就能引发你巨大的情绪波动。你的性格急躁，容易被情绪左右，前一秒或许还沉浸在喜悦之中，下一秒就可能陷入低落与焦虑。但这份敏感也赋予了你丰富的内心世界，你的音乐里藏着无尽的孤独、迷茫与渴望，既有爆发性的呐喊，也有脆弱的低语，将内心的复杂与矛盾展现得淋漓尽致。"},
+                {"name":"柴可夫斯基","tag":"自卑、深情", "desc": "你骨子里带着一丝与生俱来的自卑，总觉得自己不够好，习惯自我否定，在与人相处时，也常常不自觉地放低姿态。但这份自卑之下，藏着你极致的深情，对待亲人、朋友，你温柔体贴、掏心掏肺，愿意毫无保留地付出。你内心柔软而脆弱，容易被伤害，也容易陷入情绪的低谷，你的音乐温柔而忧伤，藏着你不为人知的委屈与孤独，却也有着打动人心的力量。"},
+                {"name":"柏辽兹","tag":"幻想、暴力", "desc": "你是一个充满幻想的人，脑洞巨大，总能想到别人想不到的东西，内心世界瑰丽而奇幻。你的情绪极端而热烈，平静时可以温和内敛，但当情绪爆发时，又会带着极强的冲动与爆发力，不计后果地去追求自己想要的东西。你的音乐充满了浪漫主义的激情与奇幻色彩，旋律跌宕起伏，节奏变化万千，完美诠释了你性格中的幻想与冲动，让人感受到极致的情绪冲击。"},
+                {"name":"德彪西","tag":"朦胧、直觉", "desc": "你是一个靠直觉生活的人，不喜欢被理性束缚，也不偏爱直白的表达，骨子里偏爱朦胧、空灵的氛围感。你对美有着独特的感知力，擅长捕捉生活中那些细微而隐晦的美好，将其融入到音乐中，创造出如梦似幻、意境悠远的旋律。你不刻意追求逻辑与秩序，遵循自己的内心，活得随性而自在，就像你的印象派音乐，没有明确的旋律线条，却能让人沉浸在独特的氛围之中。"},
+                {"name":"门德尔松","tag":"理性、洒脱", "desc": "你有着极为理性冷静的头脑，看待问题通透而客观，从不被情绪左右，也不纠结于无关的琐事。你洒脱通透，懂得取舍，遇到不开心的事，从不钻牛角尖，总能快速调整心态，坦然面对。在创作中，你理性与感性并存，既有着严谨的结构，又有着温柔的旋律，就像你的性格一样，不内耗、不焦虑，活得从容而自在，始终保持着一份清醒与淡然。"},
+                {"name":"肖邦","tag":"优雅、坚强", "desc": "你自带优雅体面的气质，外表温柔谦和，举止得体，待人温和有礼，仿佛自带一层温柔的滤镜，让人忍不住心生好感。但这份温柔之下，藏着你异常坚强的内心，面对命运的坎坷与磨难，你从不轻易低头，哪怕身处困境，也始终坚守自己的艺术追求，用音乐传递力量。你的音乐优雅而深情，既有温柔的低语，也有坚定的呐喊，完美诠释了“外柔内刚”的真正含义。"}
+            ],
+            "questions": [
+                {"id":1,"title":"你总是想尝试新鲜事物，讨厌重复和陈旧？","to":"斯特拉文斯基"},
+                {"id":2,"title":"你在感情里比较随性，不太喜欢被束缚？","to":"斯特拉文斯基"},
+                {"id":3,"title":"你常常心里想一套，表面表现另一套？","to":"勃拉姆斯"},
+                {"id":4,"title":"你很容易自我纠结，反复内耗难以平静？","to":"勃拉姆斯"},
+                {"id":5,"title":"你习惯把情绪压在心里，很少向外发泄？","to":"布鲁克纳"},
+                {"id":6,"title":"你内心有某种坚定信念，支撑你度过低谷？","to":"布鲁克纳"},
+                {"id":7,"title":"你说话直接，不喜欢拐弯抹角？","to":"贝多芬"},
+                {"id":8,"title":"遇到不爽会直接表达，不爱忍气吞声？","to":"贝多芬"},
+                {"id":9,"title":"你内心始终保留孩子气，喜欢轻松有趣的事？","to":"莫扎特"},
+                {"id":10,"title":"你讨厌严肃压抑，喜欢让气氛变快乐？","to":"莫扎特"},
+                {"id":11,"title":"就算遇到不顺，你也能很快调整心态？","to":"海顿"},
+                {"id":12,"title":"你性格随和，很少与人争执？","to":"海顿"},
+                {"id":13,"title":"你做事稳重踏实，不轻易冲动？","to":"巴赫"},
+                {"id":14,"title":"你有自己的原则，不会轻易动摇？","to":"巴赫"},
+                {"id":15,"title":"你比较现实，懂得为自己争取利益？","to":"理查·施特劳斯"},
+                {"id":16,"title":"你喜欢精致、体面、有排场的事物？","to":"理查·施特劳斯"},
+                {"id":17,"title":"你敢于打破规则，但也尊重传统根基？","to":"勋伯格"},
+                {"id":18,"title":"你喜欢创新，同时又重视逻辑与结构？","to":"勋伯格"},
+                {"id":19,"title":"你内心有很强掌控欲，喜欢布局？","to":"瓦格纳"},
+                {"id":20,"title":"你追求宏大场面，不甘于平凡渺小？","to":"瓦格纳"},
+                {"id":21,"title":"你对细节和态度特别敏感，容易多想？","to":"马勒"},
+                {"id":22,"title":"情绪上来时容易急躁，难以控制？","to":"马勒"},
+                {"id":23,"title":"你常常自我怀疑，觉得自己不够好？","to":"柴可夫斯基"},
+                {"id":24,"title":"你对在意的人非常深情，愿意默默付出？","to":"柴可夫斯基"},
+                {"id":25,"title":"你经常沉浸在强烈幻想里，脑洞极大？","to":"柏辽兹"},
+                {"id":26,"title":"情绪极端时会有冲动、激烈的想法？","to":"柏辽兹"},
+                {"id":27,"title":"你做事更靠直觉，不太喜欢严密分析？","to":"德彪西"},
+                {"id":28,"title":"你喜欢模糊、氛围感强的东西，不爱直白？","to":"德彪西"},
+                {"id":29,"title":"你遇事冷静理性，不容易情绪化？","to":"门德尔松"},
+                {"id":30,"title":"你看得开，不会长期纠结一件事？","to":"门德尔松"},
+                {"id":31,"title":"你注重姿态与体面，即使难过也保持优雅？","to":"肖邦"},
+                {"id":32,"title":"外表保持柔弱，内心其实非常坚韧？","to":"肖邦"}
+            ]
+        };
+
+        let currentQuestion = 0;
+        let answers = [];
+
+        function startQuiz() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            updateQuestion();
+            lucide.createIcons();
+        }
+
+        function updateQuestion() {
+            const q = data.questions[currentQuestion];
+            const titleEl = document.getElementById('question-title');
+            
+            // Text updates
+            titleEl.innerText = q.title;
+            document.getElementById('progress-text').innerText = `QUESTION ${currentQuestion + 1} / ${data.questions.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestion + 1) / data.questions.length) * 100}%`;
+            
+            // Prev button visibility (Top & Bottom)
+            const prevBtn = document.getElementById('prev-btn');
+            const bottomBack = document.getElementById('bottom-back-container');
+            
+            if (currentQuestion > 0) {
+                prevBtn.classList.remove('invisible');
+                bottomBack.classList.remove('invisible');
+            } else {
+                prevBtn.classList.add('invisible');
+                bottomBack.classList.add('invisible');
+            }
+
+            // Animation
+            titleEl.classList.remove('fade-in');
+            void titleEl.offsetWidth;
+            titleEl.classList.add('fade-in');
+            
+            lucide.createIcons();
+        }
+
+        function selectAnswer(score) {
+            answers[currentQuestion] = score;
+            
+            if (currentQuestion < data.questions.length - 1) {
+                currentQuestion++;
+                setTimeout(updateQuestion, 150); // Small delay for better feel
+            } else {
+                showResult();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                updateQuestion();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const scores = {};
+            data.composers.forEach(c => scores[c.name] = 0);
+            
+            answers.forEach((score, index) => {
+                const composerName = data.questions[index].to;
+                scores[composerName] += score;
+            });
+
+            let maxScore = -1;
+            let winners = [];
+
+            data.composers.forEach(c => {
+                if (scores[c.name] > maxScore) {
+                    maxScore = scores[c.name];
+                    winners = [c];
+                } else if (scores[c.name] === maxScore) {
+                    winners.push(c);
+                }
+            });
+
+            const resultComposer = winners[Math.floor(Math.random() * winners.length)];
+
+            document.getElementById('result-name').innerText = resultComposer.name;
+            document.getElementById('result-desc').innerText = resultComposer.desc;
+            
+            const tagsContainer = document.getElementById('result-tags');
+            tagsContainer.innerHTML = '';
+            resultComposer.tag.split('、').forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'bg-indigo-50 text-indigo-600 px-6 py-2 rounded-full text-lg font-bold border border-indigo-100 shadow-sm';
+                span.innerText = tag;
+                tagsContainer.appendChild(span);
+            });
+
+            lucide.createIcons();
+        }
+
+        window.onload = () => {
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
