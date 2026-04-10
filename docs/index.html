@@ -31,7 +31,7 @@
             </button>
             
             <div class="mt-8">
-                <a href="list.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 text-sm font-medium transition-colors">
+                <a id="dashboard-link" href="list.html" onclick="openDashboardGate(event)" class="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 text-sm font-medium transition-colors">
                     <i data-lucide="database" class="w-4 h-4"></i>
                     查看数据看板 (全量数据概览)
                 </a>
@@ -145,7 +145,59 @@
         </div>
     </div>
 
+    <div id="dashboard-gate" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm" onclick="handleDashboardGateBackdrop(event)">
+        <div class="glass w-full max-w-lg rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-white/50 text-center fade-in">
+            <div class="mb-6 flex justify-center">
+                <div class="bg-amber-500 p-3 rounded-2xl shadow-md rotate-3">
+                    <i data-lucide="eye-off" class="w-8 h-8 text-white"></i>
+                </div>
+            </div>
+            <h2 class="serif text-2xl md:text-3xl font-bold text-slate-800 mb-4 tracking-tight">剧透模式提示</h2>
+            <p class="text-slate-600 text-base md:text-lg leading-relaxed max-w-md mx-auto">
+                此功能用于作者调试与核对内容，属于剧透模式。是否继续进入？
+            </p>
+            <div class="mt-8 flex flex-col md:flex-row gap-3 justify-center">
+                <button onclick="goToDashboard()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="door-open" class="w-5 h-5"></i>
+                    坚持进入
+                </button>
+                <button onclick="closeDashboardGate()" class="bg-white hover:bg-slate-50 text-slate-700 px-8 py-4 rounded-full font-bold transition-all shadow-sm border border-slate-200 flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-indigo-600"></i>
+                    先做测试
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="data.js"></script>
     <script src="app.js"></script>
+    <script>
+        function openDashboardGate(e) {
+            if (e) e.preventDefault();
+            const gate = document.getElementById('dashboard-gate');
+            if (!gate) return;
+            gate.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeDashboardGate() {
+            const gate = document.getElementById('dashboard-gate');
+            if (!gate) return;
+            gate.classList.add('hidden');
+        }
+
+        function goToDashboard() {
+            window.location.href = 'list.html';
+        }
+
+        function handleDashboardGateBackdrop(e) {
+            const gate = document.getElementById('dashboard-gate');
+            if (e.target === gate) closeDashboardGate();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDashboardGate();
+        });
+    </script>
 </body>
 </html>
