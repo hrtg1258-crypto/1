@@ -31,6 +31,7 @@
             </button>
             
             <div class="mt-8">
+                <!-- 数据看板入口：为了避免“剧透”，点击后先弹出确认框，再决定是否进入 list.html -->
                 <a id="dashboard-link" href="list.html" onclick="openDashboardGate(event)" class="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 text-sm font-medium transition-colors">
                     <i data-lucide="database" class="w-4 h-4"></i>
                     查看数据看板 (全量数据概览)
@@ -60,38 +61,7 @@
                 </h2>
             </div>
 
-            <div class="grid grid-cols-1 gap-3 md:gap-4">
-                <button onclick="selectAnswer(10)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
-                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">完全符合</span>
-                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i data-lucide="check-circle-2" class="w-5 h-5 text-indigo-600"></i>
-                    </div>
-                </button>
-                <button onclick="selectAnswer(6)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
-                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">有点符合</span>
-                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i data-lucide="check" class="w-5 h-5 text-indigo-600"></i>
-                    </div>
-                </button>
-                <button onclick="selectAnswer(3)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
-                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">中立</span>
-                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i data-lucide="minus" class="w-5 h-5 text-indigo-600"></i>
-                    </div>
-                </button>
-                <button onclick="selectAnswer(1)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
-                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">不太符合</span>
-                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i data-lucide="x" class="w-5 h-5 text-indigo-600"></i>
-                    </div>
-                </button>
-                <button onclick="selectAnswer(0)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
-                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">完全不符合</span>
-                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i data-lucide="x-circle" class="w-5 h-5 text-indigo-600"></i>
-                    </div>
-                </button>
-            </div>
+            <div id="answers-container" class="grid grid-cols-1 gap-3 md:gap-4"></div>
 
             <!-- New Bottom Back Button -->
             <div id="bottom-back-container" class="mt-8 flex justify-center invisible">
@@ -145,6 +115,7 @@
         </div>
     </div>
 
+    <!-- “剧透模式”确认弹窗：默认隐藏；点击入口时显示 -->
     <div id="dashboard-gate" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm" onclick="handleDashboardGateBackdrop(event)">
         <div class="glass w-full max-w-lg rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-white/50 text-center fade-in">
             <div class="mb-6 flex justify-center">
@@ -172,6 +143,7 @@
     <script src="data.js"></script>
     <script src="app.js"></script>
     <script>
+        // 打开确认弹窗：阻止 a 标签默认跳转，改成显示弹窗
         function openDashboardGate(e) {
             if (e) e.preventDefault();
             const gate = document.getElementById('dashboard-gate');
@@ -180,21 +152,25 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
+        // 关闭确认弹窗（留在当前页面继续做测试）
         function closeDashboardGate() {
             const gate = document.getElementById('dashboard-gate');
             if (!gate) return;
             gate.classList.add('hidden');
         }
 
+        // 确认进入数据看板
         function goToDashboard() {
             window.location.href = 'list.html';
         }
 
+        // 点击遮罩层空白处关闭弹窗（点击弹窗本体不关闭）
         function handleDashboardGateBackdrop(e) {
             const gate = document.getElementById('dashboard-gate');
             if (e.target === gate) closeDashboardGate();
         }
 
+        // Esc 键关闭弹窗
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeDashboardGate();
         });

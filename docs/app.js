@@ -1,8 +1,40 @@
+/*
+测试页逻辑（出题、记录答案、计分、展示结果）
+
+依赖：
+- data.js：提供 data.questions / data.composers
+- Chart.js：用于渲染结果页雷达图
+- Lucide：用于渲染图标（可选，不影响核心逻辑）
+
+核心思路：
+1) 按题目数组顺序依次出题
+2) 用户每题选择一个分值（按钮里写死：10/6/3/1/0）
+3) 这题的分数会累加到该题指向的作曲家（question.to）
+4) 最高总分者为结果；若并列，用稳定的决胜规则选出唯一结果
+5) 结果页额外展示 Top 3，避免“只差一点点却被隐藏”
+*/
+
 let currentQuestion = 0;
+
+// answers[i] 表示第 i 题用户选择的分值（10/6/3/1/0）
+// 这里用数组而不是对象，是因为题目天然有顺序。
 let answers = [];
+
+// 五档分值（不要随意改动，否则 data.defaultChoices / question.choices 的顺序含义也要一起改）
+const SCORE_OPTIONS = [10, 6, 3, 1, 0];
+
+// 每档分值对应的图标（仅用于视觉提示，不影响计分）
+const SCORE_ICONS = {
+    10: 'check-circle-2',
+    6: 'check',
+    3: 'minus',
+    1: 'x',
+    0: 'x-circle'
+};
 
 function startQuiz() {
     try {
+        // 欢迎页 -> 测试页
         document.getElementById('welcome-screen').classList.add('hidden');
         document.getElementById('quiz-screen').classList.remove('hidden');
         updateQuestion();
@@ -14,17 +46,21 @@ function startQuiz() {
 
 function updateQuestion() {
     try {
+        // 根据 currentQuestion 拿到当前题目对象
         const q = data.questions[currentQuestion];
         const titleEl = document.getElementById('question-title');
         
         if (!q || !titleEl) return;
 
-        // Text updates
+        // 更新题干与进度条
         titleEl.innerText = q.title;
         document.getElementById('progress-text').innerText = `QUESTION ${currentQuestion + 1} / ${data.questions.length}`;
         document.getElementById('progress-bar').style.width = `${((currentQuestion + 1) / data.questions.length) * 100}%`;
+
+        // 渲染本题的 5 个选项按钮（每题可自定义文案）
+        renderAnswerButtons(q);
         
-        // Prev button visibility (Top & Bottom)
+        // 控制“返回上一题”按钮显示（顶部 + 底部）
         const prevBtn = document.getElementById('prev-btn');
         const bottomBack = document.getElementById('bottom-back-container');
         
@@ -36,7 +72,7 @@ function updateQuestion() {
             if (bottomBack) bottomBack.classList.add('invisible');
         }
 
-        // Animation
+        // 触发淡入动画：先移除 class，再强制回流，再加回来
         titleEl.classList.remove('fade-in');
         void titleEl.offsetWidth;
         titleEl.classList.add('fade-in');
@@ -47,10 +83,88 @@ function updateQuestion() {
     }
 }
 
+function getQuestionChoices(q) {
+    const fallback = Array.isArray(data.defaultChoices) ? data.defaultChoices : ['完全符合', '有点符合', '中立', '不太符合', '完全不符合'];
+    const raw = Array.isArray(q.choices) ? q.choices : [];
+    const out = [];
+    for (let i = 0; i < SCORE_OPTIONS.length; i++) {
+        const v = raw[i];
+        out.push(typeof v === 'string' && v.trim() ? v : fallback[i]);
+    }
+    return out;
+}
+
+function renderAnswerButtons(q) {
+    const container = document.getElementById('answers-container');
+    if (!container) return;
+
+    const labels = getQuestionChoices(q);
+    container.innerHTML = '';
+
+    SCORE_OPTIONS.forEach((score, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group';
+        btn.onclick = () => selectAnswer(score);
+
+        const icon = SCORE_ICONS[score] || 'check';
+
+        btn.innerHTML = `
+            <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">${labels[idx]}</span>
+            <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                <i data-lucide="${icon}" class="w-5 h-5 text-indigo-600"></i>
+            </div>
+        `;
+
+        container.appendChild(btn);
+    });
+}
+
+function manhattanDistance(aStats, bStats) {
+    const a = Array.isArray(aStats) ? aStats : [];
+    const b = Array.isArray(bStats) ? bStats : [];
+    const n = Math.min(a.length, b.length);
+    if (n === 0) return null;
+
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+        const av = Number(a[i]) || 0;
+        const bv = Number(b[i]) || 0;
+        sum += Math.abs(av - bv);
+    }
+    return sum;
+}
+
+function getBestAndWorstMatch(baseComposer, allComposers) {
+    const baseStats = baseComposer?.stats;
+    let best = null;
+    let bestDistance = Infinity;
+    let worst = null;
+    let worstDistance = -Infinity;
+
+    (allComposers || []).forEach((c) => {
+        if (!c || c.name === baseComposer?.name) return;
+        const dist = manhattanDistance(baseStats, c.stats);
+        if (dist === null) return;
+
+        if (dist < bestDistance || (dist === bestDistance && (c.name || '').localeCompare(best?.name || '', 'zh-CN') < 0)) {
+            bestDistance = dist;
+            best = c;
+        }
+        if (dist > worstDistance || (dist === worstDistance && (c.name || '').localeCompare(worst?.name || '', 'zh-CN') < 0)) {
+            worstDistance = dist;
+            worst = c;
+        }
+    });
+
+    return { best, worst };
+}
+
 function selectAnswer(score) {
     try {
+        // 记录当前题的分值（score 来自按钮 onclick：10/6/3/1/0）
         answers[currentQuestion] = score;
         
+        // 还有下一题就前进；否则进入结果页
         if (currentQuestion < data.questions.length - 1) {
             currentQuestion++;
             setTimeout(updateQuestion, 150);
@@ -71,12 +185,15 @@ function prevQuestion() {
 
 function showResult() {
     try {
+        // 测试页 -> 结果页
         document.getElementById('quiz-screen').classList.add('hidden');
         document.getElementById('result-screen').classList.remove('hidden');
 
+        // scores[name] = 某作曲家的总分
         const scores = {};
         data.composers.forEach(c => scores[c.name] = 0);
         
+        // 按题目顺序，把 answers 的分数累加到该题指向的作曲家
         answers.forEach((score, index) => {
             const composerName = data.questions[index].to;
             if (scores.hasOwnProperty(composerName)) {
@@ -84,6 +201,7 @@ function showResult() {
             }
         });
 
+        // 先找出“最高分”，同时收集所有并列的作曲家
         let maxScore = -1;
         let winners = [];
 
@@ -96,6 +214,7 @@ function showResult() {
             }
         });
 
+        // 用于最后一层兜底：如果连姓名都一样（理论上不会），用数据顺序稳定决胜
         function getComposerIndex(name) {
             for (let i = 0; i < data.composers.length; i++) {
                 if (data.composers[i].name === name) return i;
@@ -103,6 +222,8 @@ function showResult() {
             return Number.MAX_SAFE_INTEGER;
         }
 
+        // 并列决胜规则（稳定）：创新性 > 风格辨识度 > 作品影响力 > 姓名字典序 > 数据顺序
+        // 这样“相同答题 => 相同结果”，不会因为随机性而波动。
         function tieBreakCompare(a, b) {
             const ai = a.stats?.[5] ?? 0; // 艺术创新性
             const bi = b.stats?.[5] ?? 0;
@@ -118,12 +239,15 @@ function showResult() {
             return getComposerIndex(a.name) - getComposerIndex(b.name);
         }
 
+        // 如果没有并列，直接取最高分；有并列就用 tieBreakCompare 选出唯一结果
         const resultComposer = winners.length === 1 ? winners[0] : winners.slice().sort(tieBreakCompare)[0];
 
+        // 把结果写入 DOM
         document.getElementById('result-name').innerText = resultComposer.name;
         document.getElementById('result-image').src = resultComposer.image;
         document.getElementById('result-desc').innerText = resultComposer.desc;
         
+        // 标签显示：用 '、' 拆成多个徽章
         const tagsContainer = document.getElementById('result-tags');
         tagsContainer.innerHTML = '';
         resultComposer.tag.split('、').forEach(tag => {
@@ -133,10 +257,11 @@ function showResult() {
             tagsContainer.appendChild(span);
         });
 
-        // Render Radar Chart
+        // 渲染雷达图（展示作曲家的六维特征）
         renderRadarChart(resultComposer);
 
-        // Render Top-N list (Top 3) with deterministic ordering
+        // Top 3 候选（同样用稳定排序）
+        // 目的：让用户看到“差一点点”的结果是谁，避免只展示一个答案显得武断。
         const resultScreen = document.getElementById('result-screen');
         const existingTop = document.getElementById('top-list');
         if (existingTop) existingTop.remove();
@@ -168,6 +293,44 @@ function showResult() {
         });
         resultScreen.appendChild(box);
 
+        const existingCompat = document.getElementById('compat-box');
+        if (existingCompat) existingCompat.remove();
+        const compat = getBestAndWorstMatch(resultComposer, data.composers);
+        if (compat.best || compat.worst) {
+            const compatBox = document.createElement('div');
+            compatBox.id = 'compat-box';
+            compatBox.className = 'bg-white p-6 md:p-8 rounded-[2.5rem] mb-6 shadow-sm border border-slate-100 text-left';
+
+            const compatTitle = document.createElement('div');
+            compatTitle.className = 'text-slate-500 text-sm font-bold mb-4';
+            compatTitle.innerText = '相性';
+            compatBox.appendChild(compatTitle);
+
+            const bestRow = document.createElement('div');
+            bestRow.className = 'flex items-center justify-between py-1';
+            bestRow.innerHTML = `
+                <div class="flex items-center gap-2 text-slate-700 font-semibold">
+                    <i data-lucide="thumbs-up" class="w-4 h-4 text-emerald-600"></i>
+                    相性最好的作曲家
+                </div>
+                <div class="text-slate-700 font-semibold">${compat.best ? compat.best.name : '—'}</div>
+            `;
+            compatBox.appendChild(bestRow);
+
+            const worstRow = document.createElement('div');
+            worstRow.className = 'flex items-center justify-between py-1';
+            worstRow.innerHTML = `
+                <div class="flex items-center gap-2 text-slate-700 font-semibold">
+                    <i data-lucide="thumbs-down" class="w-4 h-4 text-rose-600"></i>
+                    相性最差的作曲家
+                </div>
+                <div class="text-slate-700 font-semibold">${compat.worst ? compat.worst.name : '—'}</div>
+            `;
+            compatBox.appendChild(worstRow);
+
+            resultScreen.appendChild(compatBox);
+        }
+
         if (window.lucide) lucide.createIcons();
     } catch (e) {
         console.error("Error showing result:", e);
@@ -177,7 +340,8 @@ function showResult() {
 function renderRadarChart(composer) {
     const ctx = document.getElementById('radarChart').getContext('2d');
     
-    // Destroy existing chart if it exists
+    // Chart.js 会把图表实例绑定到 canvas 上；重复创建会叠加/泄漏
+    // 所以每次渲染前先销毁旧实例。
     if (window.myRadarChart) {
         window.myRadarChart.destroy();
     }
@@ -206,6 +370,7 @@ function renderRadarChart(composer) {
                                 display: true,
                                 color: 'rgba(0, 0, 0, 0.1)'
                             },
+                            // 把最小值从 0 提到 4：画面更“放大”，更容易看出各作曲家的形状差异
                             suggestedMin: 4,
                             suggestedMax: 10,
                             ticks: {
@@ -235,7 +400,7 @@ function renderRadarChart(composer) {
 }
 
 window.onload = () => {
-    console.log("Window loaded, initializing icons...");
+    // 页面首次加载时初始化图标（不影响主要逻辑）
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     } else {

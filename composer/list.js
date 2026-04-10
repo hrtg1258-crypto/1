@@ -1,20 +1,190 @@
-// Data Dashboard Logic for list.html
+/*
+数据看板逻辑（list.html）
+
+目的：
+- 把 data.js 里的全部作曲家/题目用“列表 + 雷达图”的方式展示出来，方便你核对与调试。
+- 这里不做任何“测验计分”，只做展示与搜索过滤。
+
+依赖：
+- data.js：提供 data.composers / data.questions
+- Chart.js：为每位作曲家渲染一个小雷达图
+- Lucide：图标（可选）
+*/
+
+// 保存当前页面创建过的 Chart 实例。
+// 过滤/重渲染时需要 destroy()，否则会出现图表叠加和内存占用。
 let charts = [];
+
+// 搜索框里输入的关键词（统一转小写，便于 includes 对比）
 let searchTerm = '';
 
+let distanceChart = null;
+
 document.addEventListener('DOMContentLoaded', () => {
+    // 入口：页面 DOM 就绪后开始渲染
     renderStats();
+    setupDistanceExplorer();
     renderComposers();
     setupSearch();
     lucide.createIcons();
 });
 
+function manhattanDistance(aStats, bStats) {
+    const a = Array.isArray(aStats) ? aStats : [];
+    const b = Array.isArray(bStats) ? bStats : [];
+    const n = Math.min(a.length, b.length);
+    if (n === 0) return null;
+
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+        const av = Number(a[i]) || 0;
+        const bv = Number(b[i]) || 0;
+        sum += Math.abs(av - bv);
+    }
+    return sum;
+}
+
+function setupDistanceExplorer() {
+    const select = document.getElementById('distance-base');
+    const chartEl = document.getElementById('distance-chart');
+    if (!select || !chartEl) return;
+
+    const composers = Array.isArray(data.composers) ? data.composers : [];
+    select.innerHTML = '';
+
+    composers.forEach((c) => {
+        const opt = document.createElement('option');
+        opt.value = c.name;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+    });
+
+    const defaultName = composers[0]?.name;
+    if (defaultName) select.value = defaultName;
+
+    select.addEventListener('change', () => {
+        renderDistanceList(select.value);
+    });
+
+    renderDistanceList(select.value || defaultName);
+}
+
+function renderDistanceList(baseName) {
+    const summary = document.getElementById('distance-summary');
+    const wrap = document.getElementById('distance-chart-wrap');
+    const el = document.getElementById('distance-chart');
+    if (!el || !wrap) return;
+
+    const composers = Array.isArray(data.composers) ? data.composers : [];
+    const base = composers.find((c) => c.name === baseName) || composers[0];
+    if (!base) {
+        if (summary) summary.textContent = '';
+        if (distanceChart) {
+            distanceChart.destroy();
+            distanceChart = null;
+        }
+        return;
+    }
+
+    const rows = [];
+    composers.forEach((c) => {
+        if (!c || c.name === base.name) return;
+        const dist = manhattanDistance(base.stats, c.stats);
+        if (dist === null) return;
+        rows.push({ name: c.name, dist });
+    });
+
+    rows.sort((a, b) => {
+        if (a.dist !== b.dist) return a.dist - b.dist;
+        return (a.name || '').localeCompare(b.name || '', 'zh-CN');
+    });
+
+    const best = rows[0];
+    const worst = rows[rows.length - 1];
+    const maxDist = rows.reduce((m, r) => Math.max(m, r.dist), 0) || 1;
+
+    if (summary) {
+        summary.innerHTML = `
+            基准：<span class="font-semibold text-slate-700">${base.name}</span>
+            · 最相近：<span class="font-semibold text-slate-700">${best ? best.name : '—'}</span>
+            · 最远：<span class="font-semibold text-slate-700">${worst ? worst.name : '—'}</span>
+        `;
+    }
+
+    const height = Math.max(320, rows.length * 24 + 80);
+    wrap.style.height = `${height}px`;
+
+    if (distanceChart) {
+        distanceChart.destroy();
+        distanceChart = null;
+    }
+
+    const labels = rows.map(r => r.name);
+    const values = rows.map(r => r.dist);
+    const ctx = el.getContext('2d');
+
+    const points = rows.map(r => ({ x: r.dist, y: r.name }));
+
+    distanceChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                data: points,
+                backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                borderColor: '#4f46e5',
+                borderWidth: 1,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'linear',
+                    beginAtZero: true,
+                    suggestedMax: maxDist,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    ticks: { color: '#64748b' },
+                    title: {
+                        display: true,
+                        text: '曼哈顿距离（越小越相近）',
+                        color: '#64748b',
+                        font: { family: "'Noto Sans SC', sans-serif", weight: '600' }
+                    }
+                },
+                y: {
+                    type: 'category',
+                    labels,
+                    grid: { display: false },
+                    ticks: {
+                        color: '#334155',
+                        font: { family: "'Noto Sans SC', sans-serif", weight: '600' }
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: (items) => items?.[0]?.raw?.y ? `${items[0].raw.y}` : '',
+                        label: (context) => `距离：${context.raw?.x}`
+                    }
+                }
+            }
+        }
+    });
+}
+
 function renderStats() {
+    // 顶部三个数字：作曲家总数 / 题目总数
     document.getElementById('stat-composers').textContent = data.composers.length;
     document.getElementById('stat-questions').textContent = data.questions.length;
 }
 
 function setupSearch() {
+    // 搜索采用“实时过滤”：输入改变就重新渲染列表
     const searchInput = document.getElementById('search-input');
     searchInput.addEventListener('input', (e) => {
         searchTerm = e.target.value.toLowerCase();
@@ -25,12 +195,17 @@ function setupSearch() {
 function renderComposers() {
     const grid = document.getElementById('composers-grid');
     
-    // Destroy existing charts
+    // 每次重渲染前先销毁旧图表实例（Chart.js 的推荐用法）
     charts.forEach(chart => chart.destroy());
     charts = [];
     
     grid.innerHTML = '';
 
+    // 过滤规则：支持搜到
+    // - 作曲家姓名
+    // - 标签
+    // - 描述文案
+    // - 以及“指向该作曲家”的题目题干
     const filtered = data.composers.filter(composer => {
         if (!searchTerm) return true;
         
@@ -38,7 +213,7 @@ function renderComposers() {
         const inTag = composer.tag.toLowerCase().includes(searchTerm);
         const inDesc = composer.desc.toLowerCase().includes(searchTerm);
         
-        // Also search in related questions
+        // 题目关键词也算匹配：只要某一题题干包含关键字，就算命中该作曲家
         const relatedQuestions = data.questions.filter(q => q.to === composer.name);
         const inQuestions = relatedQuestions.some(q => q.title.toLowerCase().includes(searchTerm));
         
@@ -46,6 +221,7 @@ function renderComposers() {
     });
 
     if (filtered.length === 0) {
+        // 没有匹配时显示空态提示
         grid.innerHTML = `
             <div class="col-span-full py-20 text-center">
                 <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -59,6 +235,7 @@ function renderComposers() {
     }
 
     filtered.forEach((composer, index) => {
+        // 先插入卡片 DOM，再渲染图表（因为 Chart 需要 canvas 已经存在）
         const card = createComposerCard(composer, index);
         grid.appendChild(card);
         const chart = renderRadarChart(composer, `chart-${index}`);
@@ -72,9 +249,11 @@ function createComposerCard(composer, index) {
     const card = document.createElement('div');
     card.className = 'composer-card glass rounded-[2.5rem] p-8 shadow-sm border border-white/50 flex flex-col gap-6 fade-in';
 
-    // Find questions related to this composer
+    // 找到所有指向该作曲家的题目（q.to === composer.name）
     const relatedQuestions = data.questions.filter(q => q.to === composer.name);
 
+    // 这里用模板字符串拼 HTML，方便排版。
+    // 注意：如果数据来源是用户输入，需要做转义防止注入；本项目数据是本地维护的，所以可以简化处理。
     card.innerHTML = `
         <div class="flex items-center gap-4">
             <div class="relative">
@@ -127,9 +306,11 @@ function renderRadarChart(composer, canvasId) {
     if (!el) return null;
     const ctx = el.getContext('2d');
     
+    // 每张卡片各自创建一个 Chart 实例
     return new Chart(ctx, {
         type: 'radar',
         data: {
+            // 维度顺序需要与 data.js 中 stats 的顺序保持一致
             labels: ['创作天赋', '情感表达', '技术精湛', '风格辨识', '作品影响', '艺术创新'],
             datasets: [{
                 data: composer.stats,
@@ -152,6 +333,7 @@ function renderRadarChart(composer, canvasId) {
                         display: true,
                         color: 'rgba(0, 0, 0, 0.05)'
                     },
+                    // 与测试页保持一致：从 4 开始“放大”图形差异
                     suggestedMin: 4,
                     suggestedMax: 10,
                     ticks: {
