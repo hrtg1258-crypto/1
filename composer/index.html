@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐家人格测试 | Musician Personality Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+
+    <div id="app" class="w-full max-w-2xl">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="glass rounded-[2.5rem] p-10 md:p-16 shadow-2xl text-center fade-in">
+            <div class="mb-8 flex justify-center">
+                <div class="bg-indigo-600 p-4 rounded-3xl shadow-lg rotate-3">
+                    <i data-lucide="music" class="w-12 h-12 text-white"></i>
+                </div>
+            </div>
+            <h1 class="serif text-4xl md:text-5xl font-bold text-slate-800 mb-6 tracking-tight">音乐家人格测试</h1>
+            <p class="text-slate-600 text-lg md:text-xl mb-10 leading-relaxed max-w-md mx-auto">
+                25位古典乐巨匠，谁才是你灵魂深处的映射？<br>
+                探索属于你的音乐基因。
+            </p>
+            <button onclick="startQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-5 rounded-full text-xl font-bold transition-all transform hover:scale-105 shadow-xl flex items-center justify-center mx-auto gap-3">
+                开启探索之旅
+                <i data-lucide="sparkles" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden glass rounded-[2.5rem] p-8 md:p-12 shadow-2xl fade-in">
+            <div class="flex justify-between items-center mb-10">
+                <button onclick="prevQuestion()" id="prev-btn" class="text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-1 invisible">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    返回
+                </button>
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]" id="progress-text">QUESTION 1 / 32</span>
+                    <div class="w-32 md:w-48 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="progress-bar h-full bg-indigo-500" style="width: 3%;"></div>
+                    </div>
+                </div>
+                <div class="w-10"></div> <!-- Spacer for centering -->
+            </div>
+            
+            <div class="min-h-[140px] flex items-center justify-center text-center mb-12">
+                <h2 id="question-title" class="serif text-2xl md:text-3xl font-bold text-slate-800 leading-snug">
+                    你总是想尝试新鲜事物，讨厌重复和陈旧？
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 md:gap-4">
+                <button onclick="selectAnswer(10)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">完全符合</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+                <button onclick="selectAnswer(6)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">有点符合</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="check" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+                <button onclick="selectAnswer(3)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">中立</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="minus" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+                <button onclick="selectAnswer(1)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">不太符合</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="x" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+                <button onclick="selectAnswer(0)" class="answer-btn w-full text-left p-4 md:p-5 rounded-3xl border-2 border-transparent bg-white shadow-sm hover:border-indigo-500 hover:shadow-md transition-all flex items-center justify-between group">
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-indigo-700">完全不符合</span>
+                    <div class="bg-indigo-50 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="x-circle" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                </button>
+            </div>
+
+            <!-- New Bottom Back Button -->
+            <div id="bottom-back-container" class="mt-8 flex justify-center invisible">
+                <button onclick="prevQuestion()" class="text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full hover:bg-slate-50">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    返回上一问
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden glass rounded-[2.5rem] p-10 md:p-16 shadow-2xl text-center fade-in">
+            <div class="mb-10">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold tracking-widest uppercase mb-4">测试报告</div>
+                <h3 class="text-slate-400 text-lg md:text-xl font-medium">你的灵魂作曲家是</h3>
+            </div>
+            
+            <div class="mb-12">
+                <!-- Composer Image -->
+                <div class="flex justify-center mb-8">
+                    <div class="relative group">
+                        <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                        <img id="result-image" src="" alt="Composer Portrait" class="relative w-48 h-48 md:w-56 md:h-56 rounded-full object-cover border-4 border-white shadow-2xl">
+                    </div>
+                </div>
+                <h1 id="result-name" class="serif text-6xl md:text-8xl font-black text-slate-900 mb-8 tracking-tighter">贝多芬</h1>
+                <div id="result-tags" class="flex flex-wrap justify-center gap-3 mb-10">
+                    <!-- Tags will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Radar Chart Container -->
+            <div class="mb-12 bg-white/50 p-6 md:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <canvas id="radarChart" class="max-w-full mx-auto"></canvas>
+            </div>
+
+            <div class="bg-white p-8 md:p-12 rounded-[2.5rem] mb-12 shadow-sm border border-slate-100 relative text-left">
+                <i data-lucide="quote" class="absolute top-6 left-6 w-8 h-8 text-indigo-100 rotate-180 opacity-50"></i>
+                <p id="result-desc" class="text-slate-700 text-lg md:text-xl leading-relaxed serif italic relative z-10 indent-8">
+                    你性格直白爽快，不绕弯子，敢怒敢言，绝不委屈自己。
+                </p>
+                <i data-lucide="quote" class="absolute bottom-6 right-6 w-8 h-8 text-indigo-100 opacity-50"></i>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <button onclick="location.reload()" class="bg-slate-900 hover:bg-black text-white px-10 py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    再测一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据看板 | 音乐家人格测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .composer-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .composer-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .serif { font-family: 'Noto Serif SC', serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-20">
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50 px-6 py-4 mb-8 shadow-sm border-b border-slate-200/50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2 rounded-xl shadow-md rotate-3">
+                    <i data-lucide="database" class="w-6 h-6 text-white"></i>
+                </div>
+                <h1 class="serif text-2xl font-bold text-slate-800">全量数据看板</h1>
+            </div>
+            <a href="index.html" class="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                返回测试
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6">
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="glass p-6 rounded-3xl border border-white/50 shadow-sm flex items-center gap-4">
+                <div class="bg-blue-100 p-3 rounded-2xl">
+                    <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
+                </div>
+                <div>
+                    <div class="text-slate-400 text-sm font-medium uppercase tracking-wider">作曲家总数</div>
+                    <div id="stat-composers" class="text-2xl font-bold text-slate-800">--</div>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-3xl border border-white/50 shadow-sm flex items-center gap-4">
+                <div class="bg-purple-100 p-3 rounded-2xl">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-purple-600"></i>
+                </div>
+                <div>
+                    <div class="text-slate-400 text-sm font-medium uppercase tracking-wider">题目总数</div>
+                    <div id="stat-questions" class="text-2xl font-bold text-slate-800">--</div>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-3xl border border-white/50 shadow-sm flex items-center gap-4">
+                <div class="bg-indigo-100 p-3 rounded-2xl">
+                    <i data-lucide="activity" class="w-6 h-6 text-indigo-600"></i>
+                </div>
+                <div>
+                    <div class="text-slate-400 text-sm font-medium uppercase tracking-wider">维度数量</div>
+                    <div class="text-2xl font-bold text-slate-800">6 维</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Composers List -->
+        <div id="composers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Composer cards will be injected here -->
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="data.js"></script>
+    <script src="list.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
