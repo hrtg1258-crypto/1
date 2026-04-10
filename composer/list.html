@@ -44,7 +44,7 @@
 
     <main class="max-w-7xl mx-auto px-6">
         <!-- Summary Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="glass p-6 rounded-3xl border border-white/50 shadow-sm flex items-center gap-4">
                 <div class="bg-blue-100 p-3 rounded-2xl">
                     <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
@@ -71,6 +71,18 @@
                     <div class="text-slate-400 text-sm font-medium uppercase tracking-wider">维度数量</div>
                     <div class="text-2xl font-bold text-slate-800">6 维</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="mb-12 flex flex-col md:flex-row gap-4">
+            <div class="relative flex-1">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                <input type="text" id="search-input" placeholder="搜索作曲家、标签或题目关键词..." 
+                    class="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm">
+            </div>
+            <div id="filter-tags" class="flex flex-wrap items-center gap-2">
+                <!-- Dynamic tags will be here -->
             </div>
         </div>
 

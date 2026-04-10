@@ -29,6 +29,13 @@
                 开启探索之旅
                 <i data-lucide="sparkles" class="w-6 h-6"></i>
             </button>
+            
+            <div class="mt-8">
+                <a href="list.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 text-sm font-medium transition-colors">
+                    <i data-lucide="database" class="w-4 h-4"></i>
+                    查看数据看板 (全量数据概览)
+                </a>
+            </div>
         </div>
 
         <!-- Quiz Screen -->
@@ -39,9 +46,9 @@
                     返回
                 </button>
                 <div class="flex flex-col items-center gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]" id="progress-text">QUESTION 1 / 32</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]" id="progress-text">载入中...</span>
                     <div class="w-32 md:w-48 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                        <div id="progress-bar" class="progress-bar h-full bg-indigo-500" style="width: 3%;"></div>
+                        <div id="progress-bar" class="progress-bar h-full bg-indigo-500" style="width: 0%;"></div>
                     </div>
                 </div>
                 <div class="w-10"></div> <!-- Spacer for centering -->

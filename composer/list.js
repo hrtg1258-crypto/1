@@ -1,7 +1,11 @@
 // Data Dashboard Logic for list.html
+let charts = [];
+let searchTerm = '';
+
 document.addEventListener('DOMContentLoaded', () => {
     renderStats();
     renderComposers();
+    setupSearch();
     lucide.createIcons();
 });
 
@@ -10,20 +14,63 @@ function renderStats() {
     document.getElementById('stat-questions').textContent = data.questions.length;
 }
 
+function setupSearch() {
+    const searchInput = document.getElementById('search-input');
+    searchInput.addEventListener('input', (e) => {
+        searchTerm = e.target.value.toLowerCase();
+        renderComposers();
+    });
+}
+
 function renderComposers() {
     const grid = document.getElementById('composers-grid');
+    
+    // Destroy existing charts
+    charts.forEach(chart => chart.destroy());
+    charts = [];
+    
     grid.innerHTML = '';
 
-    data.composers.forEach((composer, index) => {
+    const filtered = data.composers.filter(composer => {
+        if (!searchTerm) return true;
+        
+        const inName = composer.name.toLowerCase().includes(searchTerm);
+        const inTag = composer.tag.toLowerCase().includes(searchTerm);
+        const inDesc = composer.desc.toLowerCase().includes(searchTerm);
+        
+        // Also search in related questions
+        const relatedQuestions = data.questions.filter(q => q.to === composer.name);
+        const inQuestions = relatedQuestions.some(q => q.title.toLowerCase().includes(searchTerm));
+        
+        return inName || inTag || inDesc || inQuestions;
+    });
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full py-20 text-center">
+                <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="search-x" class="w-8 h-8 text-slate-400"></i>
+                </div>
+                <p class="text-slate-500 font-medium">没有找到匹配的作曲家</p>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+
+    filtered.forEach((composer, index) => {
         const card = createComposerCard(composer, index);
         grid.appendChild(card);
-        renderRadarChart(composer, `chart-${index}`);
+        const chart = renderRadarChart(composer, `chart-${index}`);
+        if (chart) charts.push(chart);
     });
+    
+    lucide.createIcons();
 }
 
 function createComposerCard(composer, index) {
     const card = document.createElement('div');
-    card.className = 'composer-card glass rounded-[2.5rem] p-8 shadow-sm border border-white/50 flex flex-col gap-6';
+    card.className = 'composer-card glass rounded-[2.5rem] p-8 shadow-sm border border-white/50 flex flex-col gap-6 fade-in';
 
     // Find questions related to this composer
     const relatedQuestions = data.questions.filter(q => q.to === composer.name);
@@ -76,9 +123,11 @@ function createComposerCard(composer, index) {
 }
 
 function renderRadarChart(composer, canvasId) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    const el = document.getElementById(canvasId);
+    if (!el) return null;
+    const ctx = el.getContext('2d');
     
-    new Chart(ctx, {
+    return new Chart(ctx, {
         type: 'radar',
         data: {
             labels: ['创作天赋', '情感表达', '技术精湛', '风格辨识', '作品影响', '艺术创新'],
