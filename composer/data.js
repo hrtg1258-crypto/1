@@ -222,28 +222,45 @@ const data = {
             "你欣赏带点尖锐幽默的表达方式，觉得直白更有力量？"
         ]
     },
+    "quizModes": {
+        "standard": { "perComposer": null },
+        "simple": { "perComposer": 1 }
+    },
+    "questionSets": {},
     "questions": []
 };
 
-(function buildQuestionsFromBank() {
-    const bank = data.questionBank || {};
-    const order = Array.isArray(data.quizOrder) ? data.quizOrder : data.composers.map(c => c.name);
-    const questions = [];
-    let id = 1;
+(function buildQuestionSets() {
+    function buildQuestionsFromBank(options) {
+        const bank = data.questionBank || {};
+        const order = Array.isArray(data.quizOrder) ? data.quizOrder : data.composers.map(c => c.name);
+        const questions = [];
+        let id = 1;
 
-    order.forEach((composerName) => {
-        const entries = Array.isArray(bank[composerName]) ? bank[composerName] : [];
-        entries.forEach((entry) => {
-            const raw = typeof entry === 'string' ? { title: entry } : (entry || {});
-            const title = typeof raw.title === 'string' ? raw.title.trim() : '';
-            if (!title) return;
+        order.forEach((composerName) => {
+            const entriesAll = Array.isArray(bank[composerName]) ? bank[composerName] : [];
+            const perComposer = options?.perComposer;
+            const entries = typeof perComposer === 'number' ? entriesAll.slice(0, perComposer) : entriesAll;
 
-            const q = { id, title, to: composerName };
-            if (Array.isArray(raw.choices)) q.choices = raw.choices;
-            questions.push(q);
-            id += 1;
+            entries.forEach((entry) => {
+                const raw = typeof entry === 'string' ? { title: entry } : (entry || {});
+                const title = typeof raw.title === 'string' ? raw.title.trim() : '';
+                if (!title) return;
+
+                const q = { id, title, to: composerName };
+                if (Array.isArray(raw.choices)) q.choices = raw.choices;
+                questions.push(q);
+                id += 1;
+            });
         });
-    });
 
-    data.questions = questions;
+        return questions;
+    }
+
+    const modes = data.quizModes || {};
+    data.questionSets = {
+        standard: buildQuestionsFromBank(modes.standard),
+        simple: buildQuestionsFromBank(modes.simple)
+    };
+    data.questions = (data.questionSets.standard || []).slice();
 })();

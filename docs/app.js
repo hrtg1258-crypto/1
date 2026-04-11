@@ -32,8 +32,55 @@ const SCORE_ICONS = {
     0: 'x-circle'
 };
 
+let selectedQuizMode = 'standard';
+
+function applyQuizMode(mode) {
+    const set = data?.questionSets?.[mode];
+    if (Array.isArray(set) && set.length > 0) {
+        data.questions = set.slice();
+    }
+}
+
+function setModeButtonState(btn, active) {
+    if (!btn) return;
+    btn.classList.toggle('bg-indigo-600', active);
+    btn.classList.toggle('text-white', active);
+    btn.classList.toggle('shadow-sm', active);
+    btn.classList.toggle('text-slate-600', !active);
+    btn.classList.toggle('hover:bg-white/70', !active);
+}
+
+function setQuizMode(mode) {
+    selectedQuizMode = mode === 'simple' ? 'simple' : 'standard';
+    try { localStorage.setItem('quizMode', selectedQuizMode); } catch (_) {}
+
+    const standardBtn = document.getElementById('mode-standard');
+    const simpleBtn = document.getElementById('mode-simple');
+    setModeButtonState(standardBtn, selectedQuizMode === 'standard');
+    setModeButtonState(simpleBtn, selectedQuizMode === 'simple');
+
+    const standardCount = data?.questionSets?.standard?.length ?? data.questions.length;
+    const simpleCount = data?.questionSets?.simple?.length ?? 0;
+    const desc = document.getElementById('mode-desc');
+    if (desc) {
+        desc.textContent = selectedQuizMode === 'simple'
+            ? `简单模式：${simpleCount} 题（每位作曲家抽 1 题）`
+            : `标准模式：${standardCount} 题（完整题库）`;
+    }
+}
+
+function initQuizModeUI() {
+    let saved = null;
+    try { saved = localStorage.getItem('quizMode'); } catch (_) {}
+    setQuizMode(saved || 'standard');
+}
+
 function startQuiz() {
     try {
+        applyQuizMode(selectedQuizMode);
+        currentQuestion = 0;
+        answers = [];
+
         // 欢迎页 -> 测试页
         document.getElementById('welcome-screen').classList.add('hidden');
         document.getElementById('quiz-screen').classList.remove('hidden');
@@ -401,6 +448,7 @@ function renderRadarChart(composer) {
 
 window.onload = () => {
     // 页面首次加载时初始化图标（不影响主要逻辑）
+    initQuizModeUI();
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     } else {

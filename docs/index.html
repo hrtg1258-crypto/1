@@ -25,6 +25,17 @@
                 25位古典乐巨匠，谁才是你灵魂深处的映射？<br>
                 探索属于你的音乐基因。
             </p>
+            <div class="mb-8">
+                <div class="inline-flex p-1 rounded-full bg-white/60 border border-white/60 shadow-sm">
+                    <button id="mode-standard" onclick="setQuizMode('standard')" class="px-6 py-2 rounded-full text-sm font-bold transition-colors">
+                        标准模式
+                    </button>
+                    <button id="mode-simple" onclick="setQuizMode('simple')" class="px-6 py-2 rounded-full text-sm font-bold transition-colors">
+                        简单模式
+                    </button>
+                </div>
+                <div id="mode-desc" class="mt-3 text-slate-400 text-sm font-medium"></div>
+            </div>
             <button onclick="startQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-5 rounded-full text-xl font-bold transition-all transform hover:scale-105 shadow-xl flex items-center justify-center mx-auto gap-3">
                 开启探索之旅
                 <i data-lucide="sparkles" class="w-6 h-6"></i>
