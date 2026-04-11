@@ -64,7 +64,7 @@ function setQuizMode(mode) {
     const desc = document.getElementById('mode-desc');
     if (desc) {
         desc.textContent = selectedQuizMode === 'simple'
-            ? `简单模式：${simpleCount} 题（每位作曲家抽 1 题）`
+            ? `简单模式：${simpleCount} 题（减少结果项）`
             : `标准模式：${standardCount} 题（完整题库）`;
     }
 }
