@@ -33,6 +33,7 @@ const SCORE_ICONS = {
 };
 
 let selectedQuizMode = 'standard';
+let resultAudio = null;
 
 function applyQuizMode(mode) {
     const set = data?.questionSets?.[mode];
@@ -306,6 +307,7 @@ function showResult() {
 
         // 渲染雷达图（展示作曲家的六维特征）
         renderRadarChart(resultComposer);
+        playComposerMusic(resultComposer);
 
         // Top 3 候选（同样用稳定排序）
         // 目的：让用户看到“差一点点”的结果是谁，避免只展示一个答案显得武断。
@@ -382,6 +384,44 @@ function showResult() {
         hitCompletionCountOnce();
     } catch (e) {
         console.error("Error showing result:", e);
+    }
+}
+
+function setRecordPlayerState(playing) {
+    const el = document.getElementById('record-player');
+    if (!el) return;
+    el.classList.toggle('is-playing', !!playing);
+}
+
+function getComposerMusicSrc(composer) {
+    const raw = composer?.music;
+    if (typeof raw === 'string' && raw.trim()) return raw.trim();
+    const name = composer?.name || '';
+    return `music/${encodeURIComponent(name)}.mp3`;
+}
+
+async function playComposerMusic(composer) {
+    try {
+        if (resultAudio) {
+            resultAudio.pause();
+            resultAudio.src = '';
+            resultAudio.load();
+            resultAudio = null;
+        }
+    } catch (_) {}
+
+    setRecordPlayerState(false);
+
+    try {
+        const audio = new Audio(getComposerMusicSrc(composer));
+        audio.preload = 'auto';
+        audio.loop = true;
+        audio.volume = 1;
+        resultAudio = audio;
+        await audio.play();
+        setRecordPlayerState(true);
+    } catch (_) {
+        setRecordPlayerState(false);
     }
 }
 
