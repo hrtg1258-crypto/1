@@ -23,11 +23,48 @@ let distanceChart = null;
 document.addEventListener('DOMContentLoaded', () => {
     // 入口：页面 DOM 就绪后开始渲染
     renderStats();
+    loadCompletionCount();
     setupDistanceExplorer();
     renderComposers();
     setupSearch();
     lucide.createIcons();
 });
+
+function hash32(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16);
+}
+
+function normalizeIndexPath(pathname) {
+    const p = typeof pathname === 'string' ? pathname : '/';
+    if (!p) return '/index.html';
+    return p.endsWith('/') ? `${p}index.html` : p;
+}
+
+function getCompletionCounterInfo() {
+    const basePath = (location.pathname || '').replace(/list\.html$/i, '/');
+    const suffix = hash32(`${location.origin || ''}${normalizeIndexPath(basePath)}`);
+    return { ns: 'composer-quiz', key: `completed_${suffix}` };
+}
+
+async function loadCompletionCount() {
+    const el = document.getElementById('stat-completions');
+    if (!el) return;
+    el.textContent = '--';
+    try {
+        const { ns, key } = getCompletionCounterInfo();
+        const url = `https://api.countapi.xyz/get/${encodeURIComponent(ns)}/${encodeURIComponent(key)}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        const json = await res.json();
+        if (json && typeof json.value === 'number') {
+            el.textContent = `${json.value}`;
+        }
+    } catch (_) {}
+}
 
 function manhattanDistance(aStats, bStats) {
     const a = Array.isArray(aStats) ? aStats : [];

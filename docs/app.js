@@ -379,8 +379,58 @@ function showResult() {
         }
 
         if (window.lucide) lucide.createIcons();
+        hitCompletionCountOnce();
     } catch (e) {
         console.error("Error showing result:", e);
+    }
+}
+
+function hash32(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16);
+}
+
+function normalizeIndexPath(pathname) {
+    const p = typeof pathname === 'string' ? pathname : '/';
+    if (!p) return '/index.html';
+    return p.endsWith('/') ? `${p}index.html` : p;
+}
+
+function getCompletionCounterInfo() {
+    const suffix = hash32(`${location.origin || ''}${normalizeIndexPath(location.pathname)}`);
+    return { ns: 'composer-quiz', key: `completed_${suffix}` };
+}
+
+async function requestCompletionCount(endpoint) {
+    const { ns, key } = getCompletionCounterInfo();
+    const url = `https://api.countapi.xyz/${endpoint}/${encodeURIComponent(ns)}/${encodeURIComponent(key)}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    const json = await res.json();
+    if (!json || typeof json.value !== 'number') return null;
+    return json.value;
+}
+
+function setCompletionCountText(value) {
+    const el = document.getElementById('completion-count');
+    if (!el) return;
+    el.textContent = typeof value === 'number' ? `${value}` : '--';
+}
+
+async function hitCompletionCountOnce() {
+    try {
+        if (sessionStorage.getItem('completionCounted') === '1') return;
+        sessionStorage.setItem('completionCounted', '1');
+    } catch (_) {}
+
+    try {
+        const value = await requestCompletionCount('hit');
+        setCompletionCountText(value);
+    } catch (_) {
+        setCompletionCountText(null);
     }
 }
 
